@@ -1,0 +1,405 @@
+#pragma once
+
+#include <thread>
+#include <iostream>
+
+#include <Windows.h>
+#include <TlHelp32.h>
+
+uintptr_t p_pid;
+DWORD procces_id;
+HANDLE game;
+class Memory
+{
+public:
+    bool GetInfoWindow(const wchar_t* process_name, DWORD& process_id, HANDLE& hn) {
+        DWORD processId = 0;
+        HWND wn = FindWindowW(NULL, process_name);
+        if (wn == NULL) {
+            return false;
+        }
+        GetWindowThreadProcessId(wn, &processId);
+        process_id = processId;
+        hn = OpenProcess(PROCESS_ALL_ACCESS, NULL, processId);
+        return true;
+    }
+
+    uintptr_t GetModuleBaseAddress(DWORD procId, const wchar_t* modName)
+    {
+        uintptr_t modBaseAddr = 0;
+        HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, procId);
+        if (hSnap != INVALID_HANDLE_VALUE)
+        {
+            MODULEENTRY32 modEntry;
+            modEntry.dwSize = sizeof(modEntry);
+            if (Module32First(hSnap, &modEntry))
+            {
+                do
+                {
+                    if (!_wcsicmp(modEntry.szModule, modName))
+                    {
+                        modBaseAddr = (uintptr_t)modEntry.modBaseAddr;
+                        break;
+                    }
+                } while (Module32Next(hSnap, &modEntry));
+            }
+        }
+        CloseHandle(hSnap);
+        return modBaseAddr;
+    }
+
+    template <class T>
+    T Read(uintptr_t dwAdr) {
+        T _read;
+        ReadProcessMemory(game, LPCVOID(dwAdr), &_read, sizeof(T), NULL);
+        return _read;
+    }
+
+    void Read(uintptr_t dwAdr, LPVOID wts, int byte) {
+        ReadProcessMemory(game, LPCVOID(dwAdr), wts, byte, NULL);
+    }
+
+    template <class T>
+    void Write(uintptr_t dwAdr, T _value) {
+        WriteProcessMemory(game, LPVOID(dwAdr), &_value, sizeof(T), NULL);
+    }
+
+    void Exit(HANDLE game) {
+        CloseHandle(game);
+    }
+};
+Memory mem;
+uintptr_t moduleBase_client;
+uintptr_t moduleBase_engine;
+namespace hazedumper {
+    namespace netvars {
+        constexpr ::std::ptrdiff_t cs_gamerules_data = 0x0;
+        constexpr ::std::ptrdiff_t m_ArmorValue = 0x117CC;
+        constexpr ::std::ptrdiff_t m_Collision = 0x320;
+        constexpr ::std::ptrdiff_t m_CollisionGroup = 0x474;
+        constexpr ::std::ptrdiff_t m_Local = 0x2FCC;
+        constexpr ::std::ptrdiff_t m_MoveType = 0x25C;
+        constexpr ::std::ptrdiff_t m_OriginalOwnerXuidHigh = 0x31D4;
+        constexpr ::std::ptrdiff_t m_OriginalOwnerXuidLow = 0x31D0;
+        constexpr ::std::ptrdiff_t m_SurvivalGameRuleDecisionTypes = 0x1328;
+        constexpr ::std::ptrdiff_t m_SurvivalRules = 0xD00;
+        constexpr ::std::ptrdiff_t m_aimPunchAngle = 0x303C;
+        constexpr ::std::ptrdiff_t m_aimPunchAngleVel = 0x3048;
+        constexpr ::std::ptrdiff_t m_angEyeAnglesX = 0x117D0;
+        constexpr ::std::ptrdiff_t m_angEyeAnglesY = 0x117D4;
+        constexpr ::std::ptrdiff_t m_bBombDefused = 0x29C0;
+        constexpr ::std::ptrdiff_t m_bBombPlanted = 0x9A5;
+        constexpr ::std::ptrdiff_t m_bBombTicking = 0x2990;
+        constexpr ::std::ptrdiff_t m_bFreezePeriod = 0x20;
+        constexpr ::std::ptrdiff_t m_bGunGameImmunity = 0x9990;
+        constexpr ::std::ptrdiff_t m_bHasDefuser = 0x117DC;
+        constexpr ::std::ptrdiff_t m_bHasHelmet = 0x117C0;
+        constexpr ::std::ptrdiff_t m_bInReload = 0x32B5;
+        constexpr ::std::ptrdiff_t m_bIsDefusing = 0x997C;
+        constexpr ::std::ptrdiff_t m_bIsQueuedMatchmaking = 0x74;
+        constexpr ::std::ptrdiff_t m_bIsScoped = 0x9974;
+        constexpr ::std::ptrdiff_t m_bIsValveDS = 0x7C;
+        constexpr ::std::ptrdiff_t m_bSpotted = 0x93D;
+        constexpr ::std::ptrdiff_t m_bSpottedByMask = 0x980;
+        constexpr ::std::ptrdiff_t m_bStartedArming = 0x3400;
+        constexpr ::std::ptrdiff_t m_bUseCustomAutoExposureMax = 0x9D9;
+        constexpr ::std::ptrdiff_t m_bUseCustomAutoExposureMin = 0x9D8;
+        constexpr ::std::ptrdiff_t m_bUseCustomBloomScale = 0x9DA;
+        constexpr ::std::ptrdiff_t m_clrRender = 0x70;
+        constexpr ::std::ptrdiff_t m_dwBoneMatrix = 0x26A8;
+        constexpr ::std::ptrdiff_t m_fAccuracyPenalty = 0x3340;
+        constexpr ::std::ptrdiff_t m_fFlags = 0x104;
+        constexpr ::std::ptrdiff_t m_flC4Blow = 0x29A0;
+        constexpr ::std::ptrdiff_t m_flCustomAutoExposureMax = 0x9E0;
+        constexpr ::std::ptrdiff_t m_flCustomAutoExposureMin = 0x9DC;
+        constexpr ::std::ptrdiff_t m_flCustomBloomScale = 0x9E4;
+        constexpr ::std::ptrdiff_t m_flDefuseCountDown = 0x29BC;
+        constexpr ::std::ptrdiff_t m_flDefuseLength = 0x29B8;
+        constexpr ::std::ptrdiff_t m_flFallbackWear = 0x31E0;
+        constexpr ::std::ptrdiff_t m_flFlashDuration = 0x10470;
+        constexpr ::std::ptrdiff_t m_flFlashMaxAlpha = 0x1046C;
+        constexpr ::std::ptrdiff_t m_flLastBoneSetupTime = 0x2928;
+        constexpr ::std::ptrdiff_t m_flLowerBodyYawTarget = 0x9ADC;
+        constexpr ::std::ptrdiff_t m_flNextAttack = 0x2D80;
+        constexpr ::std::ptrdiff_t m_flNextPrimaryAttack = 0x3248;
+        constexpr ::std::ptrdiff_t m_flSimulationTime = 0x268;
+        constexpr ::std::ptrdiff_t m_flTimerLength = 0x29A4;
+        constexpr ::std::ptrdiff_t m_hActiveWeapon = 0x2F08;
+        constexpr ::std::ptrdiff_t m_hBombDefuser = 0x29C4;
+        constexpr ::std::ptrdiff_t m_hMyWeapons = 0x2E08;
+        constexpr ::std::ptrdiff_t m_hObserverTarget = 0x339C;
+        constexpr ::std::ptrdiff_t m_hOwner = 0x29DC;
+        constexpr ::std::ptrdiff_t m_hOwnerEntity = 0x14C;
+        constexpr ::std::ptrdiff_t m_hViewModel = 0x3308;
+        constexpr ::std::ptrdiff_t m_iAccountID = 0x2FD8;
+        constexpr ::std::ptrdiff_t m_iClip1 = 0x3274;
+        constexpr ::std::ptrdiff_t m_iCompetitiveRanking = 0x1A84;
+        constexpr ::std::ptrdiff_t m_iCompetitiveWins = 0x1B88;
+        constexpr ::std::ptrdiff_t m_iCrosshairId = 0x11838;
+        constexpr ::std::ptrdiff_t m_iDefaultFOV = 0x333C;
+        constexpr ::std::ptrdiff_t m_iEntityQuality = 0x2FBC;
+        constexpr ::std::ptrdiff_t m_iFOV = 0x31F4;
+        constexpr ::std::ptrdiff_t m_iFOVStart = 0x31F8;
+        constexpr ::std::ptrdiff_t m_iGlowIndex = 0x10488;
+        constexpr ::std::ptrdiff_t m_iHealth = 0x100;
+        constexpr ::std::ptrdiff_t m_iItemDefinitionIndex = 0x2FBA;
+        constexpr ::std::ptrdiff_t m_iItemIDHigh = 0x2FD0;
+        constexpr ::std::ptrdiff_t m_iMostRecentModelBoneCounter = 0x2690;
+        constexpr ::std::ptrdiff_t m_iObserverMode = 0x3388;
+        constexpr ::std::ptrdiff_t m_iShotsFired = 0x103E0;
+        constexpr ::std::ptrdiff_t m_iState = 0x3268;
+        constexpr ::std::ptrdiff_t m_iTeamNum = 0xF4;
+        constexpr ::std::ptrdiff_t m_lifeState = 0x25F;
+        constexpr ::std::ptrdiff_t m_nBombSite = 0x2994;
+        constexpr ::std::ptrdiff_t m_nFallbackPaintKit = 0x31D8;
+        constexpr ::std::ptrdiff_t m_nFallbackSeed = 0x31DC;
+        constexpr ::std::ptrdiff_t m_nFallbackStatTrak = 0x31E4;
+        constexpr ::std::ptrdiff_t m_nForceBone = 0x268C;
+        constexpr ::std::ptrdiff_t m_nTickBase = 0x3440;
+        constexpr ::std::ptrdiff_t m_nViewModelIndex = 0x29D0;
+        constexpr ::std::ptrdiff_t m_rgflCoordinateFrame = 0x444;
+        constexpr ::std::ptrdiff_t m_szCustomName = 0x304C;
+        constexpr ::std::ptrdiff_t m_szLastPlaceName = 0x35C4;
+        constexpr ::std::ptrdiff_t m_thirdPersonViewAngles = 0x31E8;
+        constexpr ::std::ptrdiff_t m_vecOrigin = 0x138;
+        constexpr ::std::ptrdiff_t m_vecVelocity = 0x114;
+        constexpr ::std::ptrdiff_t m_vecViewOffset = 0x108;
+        constexpr ::std::ptrdiff_t m_viewPunchAngle = 0x3030;
+        constexpr ::std::ptrdiff_t m_zoomLevel = 0x33E0;
+    } // namespace netvars
+    namespace signatures {
+        constexpr ::std::ptrdiff_t anim_overlays = 0x2990;
+        constexpr ::std::ptrdiff_t clientstate_choked_commands = 0x4D30;
+        constexpr ::std::ptrdiff_t clientstate_delta_ticks = 0x174;
+        constexpr ::std::ptrdiff_t clientstate_last_outgoing_command = 0x4D2C;
+        constexpr ::std::ptrdiff_t clientstate_net_channel = 0x9C;
+        constexpr ::std::ptrdiff_t convar_name_hash_table = 0x301A0;
+        constexpr ::std::ptrdiff_t dwClientState = 0x59F19C;
+        constexpr ::std::ptrdiff_t dwClientState_GetLocalPlayer = 0x180;
+        constexpr ::std::ptrdiff_t dwClientState_IsHLTV = 0x4D48;
+        constexpr ::std::ptrdiff_t dwClientState_Map = 0x28C;
+        constexpr ::std::ptrdiff_t dwClientState_MapDirectory = 0x188;
+        constexpr ::std::ptrdiff_t dwClientState_MaxPlayer = 0x388;
+        constexpr ::std::ptrdiff_t dwClientState_PlayerInfo = 0x52C0;
+        constexpr ::std::ptrdiff_t dwClientState_State = 0x108;
+        constexpr ::std::ptrdiff_t dwClientState_ViewAngles = 0x4D90;
+        constexpr ::std::ptrdiff_t dwEntityList = 0x4DFFEF4;
+        constexpr ::std::ptrdiff_t dwForceAttack = 0x322DCFC;
+        constexpr ::std::ptrdiff_t dwForceAttack2 = 0x322DD08;
+        constexpr ::std::ptrdiff_t dwForceBackward = 0x322DD38;
+        constexpr ::std::ptrdiff_t dwForceForward = 0x322DD2C;
+        constexpr ::std::ptrdiff_t dwForceJump = 0x52BBC7C;
+        constexpr ::std::ptrdiff_t dwForceLeft = 0x322DD44;
+        constexpr ::std::ptrdiff_t dwForceRight = 0x322DD50;
+        constexpr ::std::ptrdiff_t dwGameDir = 0x63AD80;
+        constexpr ::std::ptrdiff_t dwGameRulesProxy = 0x532F4AC;
+        constexpr ::std::ptrdiff_t dwGetAllClasses = 0xE0BFDC;
+        constexpr ::std::ptrdiff_t dwGlobalVars = 0x59EE60;
+        constexpr ::std::ptrdiff_t dwGlowObjectManager = 0x535A9C8;
+        constexpr ::std::ptrdiff_t dwInput = 0x525D4C8;
+        constexpr ::std::ptrdiff_t dwInterfaceLinkList = 0x99BC84;
+        constexpr ::std::ptrdiff_t dwLocalPlayer = 0xDEA964;
+        constexpr ::std::ptrdiff_t dwMouseEnable = 0x5239128;
+        constexpr ::std::ptrdiff_t dwMouseEnablePtr = 0x52390F8;
+        constexpr ::std::ptrdiff_t dwPlayerResource = 0x322C0A0;
+        constexpr ::std::ptrdiff_t dwRadarBase = 0x52369CC;
+        constexpr ::std::ptrdiff_t dwSetClanTag = 0x8DA80;
+        constexpr ::std::ptrdiff_t dwViewMatrix = 0x4DF0D24;
+        constexpr ::std::ptrdiff_t dwWeaponTable = 0x525E5A4;
+        constexpr ::std::ptrdiff_t dwWeaponTableIndex = 0x326C;
+        constexpr ::std::ptrdiff_t dwbSendPackets = 0xDD2B2;
+        constexpr ::std::ptrdiff_t dwppDirect3DDevice9 = 0xA62C0;
+        constexpr ::std::ptrdiff_t find_hud_element = 0x2EA1FBD0;
+        constexpr ::std::ptrdiff_t force_update_spectator_glow = 0x3D91CA;
+        constexpr ::std::ptrdiff_t interface_engine_cvar = 0x3FA9C;
+        constexpr ::std::ptrdiff_t is_c4_owner = 0x3E69E0;
+        constexpr ::std::ptrdiff_t m_bDormant = 0xED;       
+        constexpr ::std::ptrdiff_t m_flSpawnTime = 0x103C0;
+        constexpr ::std::ptrdiff_t m_pStudioHdr = 0x2950;
+        constexpr ::std::ptrdiff_t m_pitchClassPtr = 0x5239020;
+        constexpr ::std::ptrdiff_t model_ambient_min = 0x5A1194;
+        constexpr ::std::ptrdiff_t set_abs_angles = 0x1E72D0;
+        constexpr ::std::ptrdiff_t set_abs_origin = 0x1E7110;
+    } // namespace signatures
+} // namespace hazedumper
+
+
+#define UCONST_Pi 3.1415926535
+#define RadianToURotation 180.0f / UCONST_Pi
+struct Matrix {
+    float matrix[16];
+};
+
+struct Vector3
+{
+    // constructor
+    constexpr Vector3(
+        const float x = 0.f,
+        const float y = 0.f,
+        const float z = 0.f) noexcept :
+        x(x), y(y), z(z) { }
+
+    inline static float sqrtf(float number)
+    {
+        long i;
+        float x2, y;
+        const float threehalfs = 1.5F;
+
+        x2 = number * 0.5F;
+        y = number;
+        i = *(long*)&y;
+        i = 0x5f3759df - (i >> 1);
+        y = *(float*)&i;
+        y = y * (threehalfs - (x2 * y * y));
+        y = y * (threehalfs - (x2 * y * y));
+
+        return 1 / y;
+    }
+
+    // operator overloads
+    constexpr const Vector3& operator-(const Vector3& other) const noexcept
+    {
+        return Vector3{ x - other.x, y - other.y, z - other.z };
+    }
+
+    constexpr const Vector3& operator+(const Vector3& other) const noexcept
+    {
+        return Vector3{ x + other.x, y + other.y, z + other.z };
+    }
+
+    constexpr const Vector3& operator/(const float factor) const noexcept
+    {
+        return Vector3{ x / factor, y / factor, z / factor };
+    }
+
+    constexpr const Vector3& operator*(const float factor) const noexcept
+    {
+        return Vector3{ x * factor, y * factor, z * factor };
+    }
+
+    // utils
+    constexpr const Vector3& ToAngle() const noexcept
+    {
+        return Vector3{
+            std::atan2(-z, std::hypot(x, y)) * (180.0f / (float)UCONST_Pi),
+            std::atan2(y, x) * (180.0f / (float)UCONST_Pi),
+            0.0f };
+    }
+
+    constexpr const bool IsZero() const noexcept
+    {
+        return x == 0.f && y == 0.f && z == 0.f;
+    }
+
+    float distancee(Vector3 vec)
+    {
+        return sqrt(
+            pow(vec.x - x, 2) +
+            pow(vec.y - y, 2)
+        );
+    }
+
+
+
+    // struct data
+    float x, y, z;
+};
+constexpr Vector3 CalculateAngle(
+    const Vector3& localPosition,
+    const Vector3& enemyPosition,
+    const Vector3& viewAngles) noexcept
+{
+    return ((enemyPosition - localPosition).ToAngle() - viewAngles);
+}
+
+
+static const char* kitlenme[] = { "HEAD", "CHEST", "LEG" };
+
+struct Vector2 {
+public:
+    float x;
+    float y;
+
+    inline Vector2() : x(0), y(0) {}
+    inline Vector2(float x, float y) : x(x), y(y) {}
+
+    inline float Distance(Vector2 v) {
+        return sqrtf(((v.x - x) * (v.x - x) + (v.y - y) * (v.y - y)));
+    }
+
+    inline Vector2 operator+(const Vector2& v) const {
+        return Vector2(x + v.x, y + v.y);
+    }
+
+    inline Vector2 operator-(const Vector2& v) const {
+        return Vector2(x - v.x, y - v.y);
+    }
+    void Normalize()
+    {
+        if (x > 89.0f)
+            x -= 180.f;
+
+        if (x < -89.0f)
+            x += 180.f;
+
+        if (y > 180.f)
+            y -= 360.f;
+
+        if (y < -180.f)
+            y += 360.f;
+    }
+};
+
+float viewMatrix[4][4];
+Vector3 getBonePos(int pTargetIn, int bone)
+{
+    const int matrix = mem.Read<int>(pTargetIn + hazedumper::netvars::m_dwBoneMatrix);
+    return Vector3(
+        mem.Read<float>(matrix + 0x30 * bone + 0xC),
+        mem.Read<float>(matrix + 0x30 * bone + 0x1C),
+        mem.Read<float>(matrix + 0x30 * bone + 0x2C)
+    );
+}
+RECT Rect;
+bool WorldToScreen(Vector3 world, Vector3& screen, float flMatrix[4][4]) {
+    float w = 0.f;
+
+    screen.x = flMatrix[0][0] * world.x + flMatrix[0][1] * world.y + flMatrix[0][2] * world.z + flMatrix[0][3];
+    screen.y = flMatrix[1][0] * world.x + flMatrix[1][1] * world.y + flMatrix[1][2] * world.z + flMatrix[1][3];
+    w = flMatrix[3][0] * world.x + flMatrix[3][1] * world.y + flMatrix[3][2] * world.z + flMatrix[3][3];
+
+    if (w < 0.01f) {
+        return false;
+    }
+
+    float inw = 1.f / w;
+
+    screen.x *= inw;
+    screen.y *= inw;
+
+    int weight = static_cast<int>(Rect.right - Rect.left);
+    int height = static_cast<int>(Rect.bottom - Rect.top);
+
+    float x = float(weight / 2);
+    float y = float(height / 2);
+
+    x += float(screen.x * x);
+    y -= float(screen.y * y);
+
+    screen.x = x + Rect.left;
+    screen.y = y + Rect.top;
+
+    return true;
+}
+class player_info_t
+{
+private:
+    char __pad[0x10];
+public:
+    char name[32];
+};
+uintptr_t playerLocal;
+float distanceToLocal(DWORD64 pEntity) {
+    return getBonePos(pEntity, 8).distancee(getBonePos(playerLocal, 8));
+}
+
