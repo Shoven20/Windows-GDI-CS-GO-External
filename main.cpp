@@ -8,10 +8,10 @@ const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 static void DrawFilledRect(HDC hdc2, int x, int y, int w, int h)
 {
-	MoveToEx(hdc2, x - 2, y, NULL); // yan çizgi
-	LineTo(hdc2, x - 2 + w, y - h); // yan çizgi
-	MoveToEx(hdc2, x - 3, y, NULL); // yan çizgi
-	LineTo(hdc2, x - 3 + w, y - h); // yan çizgi
+	MoveToEx(hdc2, x - 2, y, NULL); // yan Ã§izgi
+	LineTo(hdc2, x - 2 + w, y - h); // yan Ã§izgi
+	MoveToEx(hdc2, x - 3, y, NULL); // yan Ã§izgi
+	LineTo(hdc2, x - 3 + w, y - h); // yan Ã§izgi
 }
 
 
@@ -38,15 +38,6 @@ uintptr_t entHp;
 uintptr_t entTeam;
 float boxHeight;
 float boxWeight;
-float Calc2D_Distt(const Vector2& Src, const Vector3& Dst) {
-	return sqrt(powf(Src.x - Dst.x, 2) + powf(Src.y - Dst.y, 2));
-}
-float AimFov(DWORD pEntity2)
-{
-	Vector3 ScreenPos;
-	if (!WorldToScreen(getBonePos(pEntity2, 8), ScreenPos, viewMatrix)) return 1000.f;
-	return Calc2D_Distt(Vector2(screenWidth / 2, screenHeight / 2), ScreenPos);
-}
 
 
 int main()
@@ -86,17 +77,17 @@ int main()
 
 			if (CornerBox)
 			{
-				MoveToEx(hdc, screenHeadPos.x - boxWeight / 2, screenHeadPos.y, NULL); // üst
-				LineTo(hdc, screenHeadPos.x + boxWeight / 2, screenHeadPos.y); // üst
+				MoveToEx(hdc, screenHeadPos.x - boxWeight / 2, screenHeadPos.y, NULL); // Ã¼st
+				LineTo(hdc, screenHeadPos.x + boxWeight / 2, screenHeadPos.y); // Ã¼st
 
 				MoveToEx(hdc, screenHeadPos.x - boxWeight / 2, screenPos.y, NULL); // alt
 				LineTo(hdc, screenHeadPos.x + boxWeight / 2, screenPos.y); // alt
 
-				MoveToEx(hdc, screenHeadPos.x - boxWeight / 2, screenHeadPos.y, NULL); // yan çizgi
-				LineTo(hdc, screenHeadPos.x - boxWeight / 2, screenPos.y); // yan çizgi
+				MoveToEx(hdc, screenHeadPos.x - boxWeight / 2, screenHeadPos.y, NULL); // yan Ã§izgi
+				LineTo(hdc, screenHeadPos.x - boxWeight / 2, screenPos.y); // yan Ã§izgi
 
-				MoveToEx(hdc, screenHeadPos.x + boxWeight / 2, screenHeadPos.y, NULL); // yan çizgi
-				LineTo(hdc, screenHeadPos.x + boxWeight / 2, screenPos.y); // yan çizgi
+				MoveToEx(hdc, screenHeadPos.x + boxWeight / 2, screenHeadPos.y, NULL); // yan Ã§izgi
+				LineTo(hdc, screenHeadPos.x + boxWeight / 2, screenPos.y); // yan Ã§izgi
 			}
 			if (Healthbar)
 			{
@@ -118,8 +109,8 @@ int main()
 			}
 			if (Snapline)
 			{
-				MoveToEx(hdc, screenWidth / 2, screenHeight, NULL); // yan çizgi
-				LineTo(hdc, screenPos.x, screenPos.y); // yan çizgi
+				MoveToEx(hdc, screenWidth / 2, screenHeight, NULL); // yan Ã§izgi
+				LineTo(hdc, screenPos.x, screenPos.y); // yan Ã§izgi
 			}
 			
 			ReleaseDC(NULL, hdc); DeleteObject(EspPen); DeleteObject(EspPen2); DeleteObject(EspPen3);
