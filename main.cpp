@@ -26,7 +26,7 @@ void DrawString(HDC hdc, int x, int y, const char* text) {
 	DeleteObject(Font);
 }
 
-bool CornerBox = true;
+bool NormalBox = true;
 bool Healthbar = true;
 bool Snapline = true;
 bool NameESP = true;	
@@ -75,7 +75,7 @@ int main()
 			HPEN EspPen3 = CreatePen(PS_SOLID, 1, RGB(30, 30, 30));
 			HDC hdc = GetDC(counter);  SelectObject(hdc, EspPen);
 
-			if (CornerBox)
+			if (NormalBox)
 			{
 				MoveToEx(hdc, screenHeadPos.x - boxWeight / 2, screenHeadPos.y, NULL); // üst
 				LineTo(hdc, screenHeadPos.x + boxWeight / 2, screenHeadPos.y); // üst
